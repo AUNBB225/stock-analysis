@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบวิเคราะห์หุ้นขั้นสูง | Quantitative Stock Analysis</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-wrapper">
+    <header class="app-header">
+      <div class="header-content container">
+        <div class="logo-area">
+          <i class="fas fa-chart-line logo-icon"></i>
+          <h1>Stock Analytics Pro</h1>
+        </div>
+        <div class="search-container">
+          <div class="search-input-wrapper">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="stockTickerInput" placeholder="ใส่สัญลักษณ์หุ้น (เช่น AAPL, MSFT, GOOGL)" value="AAPL">
+          </div>
+          <button id="searchButton" class="primary-button">
+            <i class="fas fa-analytics"></i> วิเคราะห์
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="timeframe-selector">
+        <h3><i class="fas fa-calendar-alt"></i> ช่วงเวลาการวิเคราะห์</h3>
+        <div class="timeframe-buttons">
+          <button onclick="changeTimeframe('daily')" data-timeframe="daily" class="timeframe-button active">
+            <i class="fas fa-calendar-day"></i> รายวัน
+          </button>
+          <button onclick="changeTimeframe('weekly')" data-timeframe="weekly" class="timeframe-button">
+            <i class="fas fa-calendar-week"></i> รายสัปดาห์
+          </button>
+          <button onclick="changeTimeframe('monthly')" data-timeframe="monthly" class="timeframe-button">
+            <i class="fas fa-calendar-alt"></i> รายเดือน
+          </button>
+        </div>
+        <div id="timeframeDisplay" class="timeframe-display">ช่วงเวลา: รายวัน</div>
+      </div>
+
+      <div class="loading-spinner" id="loadingSpinner">
+        <div class="spinner"></div>
+        <p>กำลังวิเคราะห์ข้อมูล...</p>
+      </div>
+
+      <div class="error-message" id="errorMessage">
+        <i class="fas fa-exclamation-circle"></i>
+        <p id="errorText">ไม่พบข้อมูลหุ้นที่ระบุ กรุณาลองใหม่อีกครั้ง</p>
+      </div>
+
+      <div class="dashboard" id="dashboard">
+        <section class="stock-info-section">
+          <div class="stock-header">
+            <div class="stock-title">
+              <i class="fas fa-building"></i>
+              <h2 id="stockName">Apple Inc. (AAPL)</h2>
+            </div>
+            <div class="stock-price">
+              <span id="currentPrice">$150.00</span>
+              <span id="priceChange" class="price-up">+2.50 (1.67%)</span>
+            </div>
+          </div>
+        </section>
+
+        <div class="dashboard-grid">
+          <section class="chart-section">
+            <div class="section-header">
+              <i class="fas fa-chart-area"></i>
+              <h3>กราฟราคา</h3>
+            </div>
+            <div class="chart-container">
+              <canvas id="priceChart"></canvas>
+            </div>
+          </section>
+
+          <section class="analysis-section">
+            <div class="section-header">
+              <i class="fas fa-microscope"></i>
+              <h3>การวิเคราะห์ทางเทคนิค</h3>
+            </div>
+            <div class="analysis-grid">
+              <div class="analysis-card">
+                <div class="card-header">
+                  <i class="fas fa-signal"></i>
+                  <h4>RSI</h4>
+                </div>
+                <div class="gauge-container">
+                  <div class="gauge" id="rsiGauge">
+                    <div class="gauge-fill" style="width: 60%"></div>
+                  </div>
+                  <div class="gauge-value" id="rsiValue">60</div>
+                </div>
+              </div>
+              <div class="analysis-card">
+                <div class="card-header">
+                  <i class="fas fa-bolt"></i>
+                  <h4>ความผันผวน</h4>
+                </div>
+                <div class="gauge-container">
+                  <div class="gauge" id="volatilityGauge">
+                    <div class="gauge-fill" style="width: 45%"></div>
+                  </div>
+                  <div class="gauge-value" id="volatilityValue">45%</div>
+                </div>
+              </div>
+              <div class="analysis-card">
+                <div class="card-header">
+                  <i class="fas fa-shield-alt"></i>
+                  <h4>แนวรับ</h4>
+                </div>
+                <div class="value-display" id="supportLevel">$145.20</div>
+              </div>
+              <div class="analysis-card">
+                <div class="card-header">
+                  <i class="fas fa-sort-amount-up"></i>
+                  <h4>แนวต้าน</h4>
+                </div>
+                <div class="value-display" id="resistanceLevel">$152.80</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="signal-section">
+            <div class="section-header">
+              <i class="fas fa-broadcast-tower"></i>
+              <h3>สัญญาณการซื้อขาย</h3>
+            </div>
+            <div class="signal-container">
+              <div class="signal-indicator">
+                <div class="signal-light" id="signalLight"></div>
+                <div class="signal-label" id="signalLabel">NEUTRAL</div>
+              </div>
+              <div class="signal-strength">
+                <h4><i class="fas fa-tachometer-alt"></i> ความแข็งแกร่งของสัญญาณ</h4>
+                <div class="gauge-container">
+                  <div class="gauge" id="signalStrengthGauge">
+                    <div class="gauge-fill" style="width: 65%"></div>
+                  </div>
+                  <div class="gauge-value" id="signalStrengthValue">65%</div>
+                </div>
+              </div>
+              <div class="signal-reason" id="signalReason">
+                ราคาอยู่ในช่วงทรงตัว ไม่มีสัญญาณที่ชัดเจน
+              </div>
+            </div>
+          </section>
+
+          <section class="probability-section">
+            <div class="section-header">
+              <i class="fas fa-percentage"></i>
+              <h3>การวิเคราะห์ความน่าจะเป็น</h3>
+            </div>
+            <div class="probability-container">
+              <div class="probability-card">
+                <div class="card-header">
+                  <i class="fas fa-long-arrow-alt-up"></i>
+                  <h4>โอกาสขึ้น</h4>
+                </div>
+                <div class="probability-value up-probability" id="upProbability">65%</div>
+              </div>
+              <div class="probability-card">
+                <div class="card-header">
+                  <i class="fas fa-long-arrow-alt-down"></i>
+                  <h4>โอกาสลง</h4>
+                </div>
+                <div class="probability-value down-probability" id="downProbability">35%</div>
+              </div>
+              <div class="probability-card">
+                <div class="card-header">
+                  <i class="fas fa-ruler-combined"></i>
+                  <h4>ช่วงราคาคาดการณ์</h4>
+                </div>
+                <div class="range-value" id="priceRange">$147.50 - $153.20</div>
+              </div>
+              <div class="probability-card">
+                <div class="card-header">
+                  <i class="fas fa-trophy"></i>
+                  <h4>โอกาสสำเร็จ</h4>
+                </div>
+                <div class="probability-value success-probability" id="successProbability">58%</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="trading-signals-section">
+            <div class="section-header">
+              <i class="fas fa-exchange-alt"></i>
+              <h3>สัญญาณซื้อขายโดยละเอียด</h3>
+            </div>
+            <div id="tradingSignalsContainer" class="trading-signals-container">
+              <!-- สัญญาณซื้อขายจะถูกเพิ่มที่นี่โดย JavaScript -->
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-info">
+            <p>&copy; 2025 Stock Analytics Pro | ระบบวิเคราะห์หุ้นด้วยคณิตศาสตร์ขั้นสูง</p>
+            <p><small>ข้อมูลจาก Yahoo Finance API</small></p>
+          </div>
+          <div class="footer-links">
+            <a href="#" class="footer-link"><i class="fas fa-question-circle"></i> วิธีใช้งาน</a>
+            <a href="#" class="footer-link"><i class="fas fa-file-alt"></i> ข้อกำหนดการใช้งาน</a>
+            <a href="#" class="footer-link"><i class="fas fa-shield-alt"></i> นโยบายความเป็นส่วนตัว</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/chart.js"></script>
+  <script src="js/indicators.js"></script>
+</body>
+</html>
