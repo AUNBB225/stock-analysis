@@ -54,6 +54,9 @@ app.get('/api/analyze/:ticker/:timeframe?', async (req, res) => {
     try {
       // วิเคราะห์ข้อมูลโดยใช้โมดูล stockAnalyzer พร้อมพารามิเตอร์ timeframe
       const analysis = stockAnalyzer.analyzeStock(response.data, timeframe);
+      console.log("Server sending analysis with success probability:",analysis.probabilityAnalysis ? analysis.probabilityAnalysis.successProbability : 'undefined',
+        "Trading signals probability:", 
+        analysis.tradingSignals ? analysis.tradingSignals.successProbability : 'undefined');
       res.json(analysis);
     } catch (analysisError) {
       console.error('ข้อผิดพลาดในการวิเคราะห์:', analysisError);

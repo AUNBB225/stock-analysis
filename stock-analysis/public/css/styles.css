@@ -873,3 +873,167 @@ main {
 .theme-toggle i {
   font-size: 1.2rem;
 }
+
+/* เพิ่ม CSS นี้ในไฟล์ styles.css */
+
+/* Help System Styles */
+.help-system {
+  position: relative;
+  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+}
+
+.help-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  margin: 0 auto;
+  font-family: inherit;
+}
+
+.help-toggle:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.help-content {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 1000px;
+  max-height: 90vh;
+  background-color: var(--card-color);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.help-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg);
+  background: var(--primary-gradient);
+  color: white;
+}
+
+.help-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.help-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.help-close:hover {
+  transform: scale(1.1);
+}
+
+.help-sections {
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+  max-height: calc(90vh - 70px);
+}
+
+.help-section {
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.help-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.help-section h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  color: var(--primary-color);
+  font-size: 1.3rem;
+}
+
+.help-section p {
+  margin-bottom: var(--spacing-md);
+  line-height: 1.6;
+}
+
+.help-section ul, .help-section ol {
+  margin-bottom: var(--spacing-md);
+  padding-left: var(--spacing-xl);
+}
+
+.help-section li {
+  margin-bottom: var(--spacing-sm);
+  line-height: 1.6;
+}
+
+.help-note {
+  background-color: rgba(255, 214, 0, 0.1);
+  border-left: 4px solid var(--warning-color);
+  padding: var(--spacing-md);
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  margin: var(--spacing-md) 0;
+}
+
+.help-symbols {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  padding-left: 0 !important;
+  list-style: none;
+}
+
+.symbol-tag {
+  background-color: var(--primary-light);
+  color: white;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-family: monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.help-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .help-content {
+    width: 95%;
+  }
+  
+  .help-sections {
+    padding: var(--spacing-md);
+  }
+}

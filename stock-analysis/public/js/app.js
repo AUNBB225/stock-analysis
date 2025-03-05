@@ -127,6 +127,32 @@ function updateDashboard(data) {
   priceRange.textContent = `$${probabilityAnalysis.expectedPriceRange.lowerBound} - $${probabilityAnalysis.expectedPriceRange.upperBound}`;
   successProbability.textContent = `${probabilityAnalysis.successProbability}%`;
 
+    // ตรวจสอบข้อมูล successProbability ที่ได้รับ
+  console.log("Received success probability:", 
+    data.probabilityAnalysis ? data.probabilityAnalysis.successProbability : 'undefined',
+    "Trading signals:", data.tradingSignals ? data.tradingSignals.successProbability : 'undefined');
+
+// อัปเดตค่า successProbability
+if (successProbability) {
+// ใช้ค่าที่คำนวณมาจริงๆ แทนค่าคงที่
+const probabilityValue = data.tradingSignals && data.tradingSignals.successProbability !== undefined 
+? data.tradingSignals.successProbability 
+: (data.probabilityAnalysis && data.probabilityAnalysis.successProbability !== undefined 
+? data.probabilityAnalysis.successProbability 
+: 50);
+
+successProbability.textContent = `${probabilityValue}%`;
+
+// ปรับสีตามค่าความน่าจะเป็น
+if (probabilityValue > 70) {
+successProbability.style.color = 'var(--success-color)';
+} else if (probabilityValue < 40) {
+successProbability.style.color = 'var(--danger-color)';
+} else {
+successProbability.style.color = 'var(--primary-color)';
+}
+}
+
     // เพิ่มการแสดงผลสัญญาณซื้อขาย
     if (data.tradingSignals) {
       updateTradingSignals(data.tradingSignals);
@@ -326,3 +352,41 @@ function changeTimeframe(timeframe) {
   const ticker = stockTickerInput.value.trim() || 'AAPL';
   analyzeStock(ticker, timeframe);
 }
+
+// เพิ่มโค้ดนี้ที่ท้ายไฟล์ app.js หรือในไฟล์ JavaScript หลัก
+
+// เพิ่มระบบช่วยเหลือ
+document.addEventListener('DOMContentLoaded', function() {
+  const helpToggle = document.getElementById('helpToggle');
+  const helpContent = document.getElementById('helpContent');
+  const helpClose = document.getElementById('helpClose');
+  
+  // สร้าง overlay element
+  const overlay = document.createElement('div');
+  overlay.className = 'help-overlay';
+  document.body.appendChild(overlay);
+  
+  // เปิดคู่มือการใช้งาน
+  helpToggle.addEventListener('click', function() {
+    helpContent.style.display = 'block';
+    overlay.style.display = 'block';
+    document.body.style.overflow = 'hidden'; // ป้องกันการเลื่อน
+  });
+  
+  // ปิดคู่มือการใช้งาน
+  function closeHelp() {
+    helpContent.style.display = 'none';
+    overlay.style.display = 'none';
+    document.body.style.overflow = ''; // คืนค่าการเลื่อน
+  }
+  
+  helpClose.addEventListener('click', closeHelp);
+  overlay.addEventListener('click', closeHelp);
+  
+  // ปิดคู่มือเมื่อกด Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && helpContent.style.display === 'block') {
+      closeHelp();
+    }
+  });
+});

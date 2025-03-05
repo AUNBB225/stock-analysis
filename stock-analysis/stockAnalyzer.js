@@ -311,6 +311,7 @@ function generateTradingSignals(currentPrice, volatility, rsi, supportLevel, res
     
     // คำนวณโอกาสสำเร็จสำหรับสัญญาณซื้อ
     successProbability = calculateBuySuccessProbability(rsi, currentPrice, supportLevel, volatility);
+    console.log("Buy signal detected, success probability:", successProbability);
   }
   
   // สำหรับสัญญาณขาย
@@ -322,8 +323,37 @@ function generateTradingSignals(currentPrice, volatility, rsi, supportLevel, res
     
     // คำนวณโอกาสสำเร็จสำหรับสัญญาณขาย
     successProbability = calculateSellSuccessProbability(rsi, currentPrice, resistanceLevel, volatility);
+    console.log("Sell signal detected, success probability:", successProbability);
   }
-  
+  // กรณีสัญญาณ NEUTRAL กำหนดค่าใหม่ที่แปรผันตามปัจจัย
+  else {
+    // คำนวณความสัมพันธ์ของราคาปัจจุบันกับค่าเฉลี่ย แนวรับ และแนวต้าน
+    const priceToSupportRatio = (currentPrice - supportLevel) / supportLevel;
+    const resistanceToPriceRatio = (resistanceLevel - currentPrice) / currentPrice;
+    const volatilityFactor = volatility / currentPrice;
+    
+    // คำนวณความสมดุลของราคาเทียบกับแนวรับและแนวต้าน
+    const equilibriumFactor = Math.abs(resistanceToPriceRatio - priceToSupportRatio);
+    
+    // ปรับความน่าจะเป็นตามปัจจัยต่างๆ
+    if (equilibriumFactor < 0.02) { // ราคาอยู่กึ่งกลางพอดี
+      successProbability = 50;
+    } else if (resistanceToPriceRatio < priceToSupportRatio) { // ใกล้แนวต้านมากกว่า
+      // ยิ่งใกล้แนวต้าน ยิ่งมีโอกาสล้มเหลวมากขึ้น
+      successProbability = 50 - (15 * (1 - equilibriumFactor));
+    } else { // ใกล้แนวรับมากกว่า
+      // ยิ่งใกล้แนวรับ ยิ่งมีโอกาสสำเร็จมากขึ้น
+      successProbability = 50 + (15 * (1 - equilibriumFactor));
+    }
+    
+    // ปรับตามความผันผวน
+    successProbability = successProbability * (1 - (volatilityFactor * 0.5));
+    
+    // ปรับค่าให้อยู่ในช่วง 30-70%
+    successProbability = Math.max(30, Math.min(70, successProbability));
+    
+    console.log("Neutral signal, calculated success probability:", successProbability);
+  }
   return {
     buySignal: {
       active: rsi < 30 || currentPrice < supportLevel * 1.01,
@@ -347,21 +377,31 @@ function calculateBuySuccessProbability(rsi, currentPrice, supportLevel, volatil
   
   // ยิ่ง RSI ต่ำ ยิ่งมีโอกาสจะเด้งกลับ
   if (rsi < 20) {
-    probability += 20;
+    probability += 25;
   } else if (rsi < 30) {
-    probability += 10;
+    probability += 15;
+  } else if (rsi < 40) {
+    probability += 5;
   }
   
   // ยิ่งใกล้แนวรับ ยิ่งมีโอกาสจะเด้งกลับ
   const distanceToSupport = Math.abs(currentPrice - supportLevel);
-  if (distanceToSupport < volatility * 0.2) {
-    probability += 15;
-  } else if (distanceToSupport < volatility * 0.5) {
+  const relativeDistance = distanceToSupport / supportLevel;
+
+  if (relativeDistance < 0.01) {
+    probability += 20;
+  } else if (relativeDistance < 0.03) {
+    probability += 10;
+  } else if (relativeDistance < 0.05) {
     probability += 5;
   }
   
-  // จำกัดค่าความน่าจะเป็นให้อยู่ระหว่าง 0-100
-  return Math.min(Math.max(probability, 0), 100);
+  // ปรับตามความผันผวน - ความผันผวนสูงลดความแน่นอน
+  const volatilityFactor = volatility / currentPrice;
+  probability = probability * (1 - (volatilityFactor * 0.5));
+  
+  // จำกัดค่าความน่าจะเป็นให้อยู่ระหว่าง 30-95
+  return Math.min(Math.max(probability, 30), 95);
 }
 
 // เพิ่มฟังก์ชันสำหรับคำนวณโอกาสสำเร็จของสัญญาณขาย
@@ -370,24 +410,33 @@ function calculateSellSuccessProbability(rsi, currentPrice, resistanceLevel, vol
   
   // ยิ่ง RSI สูง ยิ่งมีโอกาสจะปรับฐาน
   if (rsi > 80) {
-    probability += 20;
+    probability += 25;
   } else if (rsi > 70) {
-    probability += 10;
+    probability += 15;
+  } else if (rsi > 60) {
+    probability += 5;
   }
   
   // ยิ่งใกล้แนวต้าน ยิ่งมีโอกาสจะปรับฐาน
   const distanceToResistance = Math.abs(currentPrice - resistanceLevel);
-  if (distanceToResistance < volatility * 0.2) {
-    probability += 15;
-  } else if (distanceToResistance < volatility * 0.5) {
+  const relativeDistance = distanceToResistance / resistanceLevel;
+  
+  if (relativeDistance < 0.01) {
+    probability += 20;
+  } else if (relativeDistance < 0.03) {
+    probability += 10;
+  } else if (relativeDistance < 0.05) {
     probability += 5;
   }
   
-  // จำกัดค่าความน่าจะเป็นให้อยู่ระหว่าง 0-100
-  return Math.min(Math.max(probability, 0), 100);
+  // ปรับตามความผันผวน - ความผันผวนสูงลดความแน่นอน
+  const volatilityFactor = volatility / currentPrice;
+  probability = probability * (1 - (volatilityFactor * 0.5));
+  
+  // จำกัดค่าความน่าจะเป็นให้อยู่ระหว่าง 30-95
+  return Math.min(Math.max(probability, 30), 95);
 }
 
-// แก้ไขฟังก์ชัน analyzeStock เพื่อรองรับช่วงเวลาและเพิ่มสัญญาณซื้อขายละเอียด
 function analyzeStock(stockData, timeframe = 'daily') {
   // ตรวจสอบโครงสร้างข้อมูล
   if (!stockData || !stockData.body || stockData.body.length === 0) {
@@ -405,7 +454,7 @@ function analyzeStock(stockData, timeframe = 'daily') {
     const volume = parseInt(stock.regularMarketVolume) || 0;
     const previousClose = parseFloat(stock.regularMarketPreviousClose) || currentPrice;
     
-    // คำนวณการเปลี่ยนแปลงราคา (ป้องกันการหารด้วยศูนย์)
+    // คำนวณการเปลี่ยนแปลงราคา
     const priceChange = currentPrice - previousClose;
     const priceChangePercent = previousClose !== 0 ? (priceChange / previousClose) * 100 : 0;
     
@@ -418,7 +467,7 @@ function analyzeStock(stockData, timeframe = 'daily') {
     const volatility = highPrice - lowPrice;
     const volatilityPercent = lowPrice !== 0 ? (volatility / lowPrice) * 100 : 0;
     
-    // 3. คำนวณ RSI 
+    // 3. คำนวณ RSI
     let rsi = simulateRSI(currentPrice, previousClose);
     
     // 4. คำนวณแนวรับแนวต้าน
@@ -436,6 +485,20 @@ function analyzeStock(stockData, timeframe = 'daily') {
     
     // 8. สร้างสัญญาณซื้อขายละเอียด
     const tradingSignals = generateTradingSignals(currentPrice, volatility, rsi, supportLevel, resistanceLevel, avgPrice);
+    
+    // คำนวณค่าความน่าจะเป็นของความสำเร็จ - กำหนดค่าตรงนี้แทนที่จะใช้ค่าที่ไม่ได้ประกาศ
+    let calculatedSuccessProbability = 50; // ค่าเริ่มต้น
+    
+    if (signal.recommendation === 'BUY') {
+      calculatedSuccessProbability = probabilityAnalysis.upProbability * 100;
+    } else if (signal.recommendation === 'SELL') {
+      calculatedSuccessProbability = probabilityAnalysis.downProbability * 100;
+    }
+    
+    // ใช้ค่าจาก tradingSignals ถ้ามี
+    if (tradingSignals && tradingSignals.successProbability !== undefined) {
+      calculatedSuccessProbability = tradingSignals.successProbability;
+    }
     
     // สร้างและส่งคืนผลลัพธ์การวิเคราะห์
     const result = {
@@ -468,10 +531,7 @@ function analyzeStock(stockData, timeframe = 'daily') {
         upProbability: Math.round(probabilityAnalysis.upProbability * 100 * 100) / 100,
         downProbability: Math.round(probabilityAnalysis.downProbability * 100 * 100) / 100,
         expectedPriceRange: probabilityAnalysis.expectedRange,
-        successProbability: Math.round((signal.recommendation === 'BUY' ? 
-                            probabilityAnalysis.upProbability * 100 : 
-                            signal.recommendation === 'SELL' ? 
-                            probabilityAnalysis.downProbability * 100 : 50) * 100) / 100
+        successProbability: Math.round(calculatedSuccessProbability * 100) / 100 // ใช้ค่าที่คำนวณไว้แล้ว
       },
       tradingSignals: tradingSignals
     };
@@ -479,6 +539,7 @@ function analyzeStock(stockData, timeframe = 'daily') {
     return result;
   } catch (error) {
     console.error('เกิดข้อผิดพลาดระหว่างการวิเคราะห์:', error.message);
+    console.error(error.stack);
     return { error: `เกิดข้อผิดพลาดในการวิเคราะห์: ${error.message}` };
   }
 }
@@ -490,5 +551,7 @@ module.exports = {
   simulateRSI,
   calculateProbabilities,
   calculateSignalStrength,
-  generateTradingSignals
+  generateTradingSignals,
+  calculateBuySuccessProbability,
+  calculateSellSuccessProbability
 };
